@@ -21,12 +21,12 @@ server.route({
       .then((user) => postMessage(teamTokens[teamId], user, channel, `${usersText ? usersText + ' ': ''}(╯°□°)╯︵ ┻━┻`))
       .then((msg) => reply(''))
       .catch(err => {
+        console.log(err);
         reply({text: 'Something went wrong', in_channel: false})
           .header('Content-Type', 'application/json');
       });
   }
 });
-
 
 server.route({
   method: 'GET',
@@ -52,6 +52,7 @@ server.route({
       let token = JSON.parse(body).access_token;
       let teamID = JSON.parse(body).team_id;
       teamTokens[teamID] = token;
+      console.log(JSON.stringify(teamTokens, null, 2));
 
       reply('Integration installed');
     });
@@ -67,7 +68,7 @@ function getUser(token, username) {
   return new Promise((resolve, reject) => {
     request(`https://slack.com/api/users.list?token=${token}`, function (error, response, body) {
       if (!error && response.statusCode == 200) {
-        for(let user of JSON.parse(body).members) {
+        for(let user of JSON.parse(body).members || []) {
           if(user.id === username) {
             resolve(user);
           }
