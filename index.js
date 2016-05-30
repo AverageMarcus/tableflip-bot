@@ -4,24 +4,48 @@ const Hapi = require('hapi');
 const server = new Hapi.Server();
 server.connection({ port: process.env.PORT || 7000 });
 
-const token = process.env.TOKEN;
+const clientID = process.env.client_id;
+const clientSecret = process.env.client_secret;
+let teamTokens = {};
 
 server.route({
   method: 'POST',
   path: '/tableflip',
-  handler: function (request, reply) {
+  handler: function(request, reply) {
     let channel = request.payload.channel_id;
     let userID = request.payload.user_id;
+    let teamId = request.payload.team_id;
     let usersText = request.payload.text || '';
-    getUser(userID)
-      .then((user) => postMessage(user, channel, `${usersText ? usersText + ' ': ''}(╯°□°)╯︵ ┻━┻`))
+
+    getUser(teamTokens[teamId], userID)
+      .then((user) => postMessage(teamTokens[teamId], user, channel, `${usersText ? usersText + ' ': ''}(╯°□°)╯︵ ┻━┻`))
       .then((msg) => reply(''))
       .catch(err => {
         reply({text: 'Something went wrong', in_channel: false})
           .header('Content-Type', 'application/json');
       });
+  }
+});
 
-    //reply(`${request.params.text} (╯°□°)╯︵ ┻━┻`);
+server.route({
+  method: 'GET',
+  path: '/install',
+  handler: function(request, reply) {
+    return reply.redirect(`https://slack.com/oauth/authorize?client_id=${clientID}&scope=chat:write:bot,users:read`);
+  }
+});
+
+server.route({
+  method: 'GET',
+  path: '/auth',
+  handler: function(request, reply) {
+    request(`https://slack.com/api/oauth.access?client_id=${clientID}&client_secret=${clientSecret}&code=${request.query.code}`, function(error, response, body) {
+      let token = JSON.parse(body).access_token;
+      let teamID = JSON.parse(body).team_id;
+      teamTokens[teamID] = token;
+
+      reply('');
+    });
   }
 });
 
@@ -30,9 +54,7 @@ server.start((err) => {
   console.log('Server running at:', server.info.uri);
 });
 
-
-
-function getUser(username) {
+function getUser(token, username) {
   return new Promise((resolve, reject) => {
     request(`https://slack.com/api/users.list?token=${token}`, function (error, response, body) {
       if (!error && response.statusCode == 200) {
@@ -60,7 +82,7 @@ function urlEncodeTag(strings, ...values) {
     return result;
 };
 
-function postMessage(user, channel, message) {
+function postMessage(token, user, channel, message) {
   return new Promise((resolve, reject) => {
     console.log(`Posting as ${user.name}`);
     let url = urlEncodeTag`https://slack.com/api/chat.postMessage?token=${token}&channel=${channel}&text=${message}&username=${user.profile.real_name_normalized || user.name}&as_user=false&icon_url=${user.profile.image_512}`;
