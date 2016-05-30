@@ -27,6 +27,15 @@ server.route({
   }
 });
 
+
+server.route({
+  method: 'GET',
+  path: '/tableflip',
+  handler: function(req, reply) {
+    reply('');
+  }
+});
+
 server.route({
   method: 'GET',
   path: '/install',
