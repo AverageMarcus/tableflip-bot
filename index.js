@@ -8,6 +8,16 @@ const clientID = process.env.client_id;
 const clientSecret = process.env.client_secret;
 let teamTokens = {};
 
+server.register(require('vision'), (err) => {
+  server.views({
+    engines: {
+      html: require('handlebars')
+    },
+    relativeTo: __dirname,
+    path: 'views'
+  });
+});
+
 server.route({
   method: 'POST',
   path: '/tableflip',
@@ -49,14 +59,12 @@ server.route({
   path: '/auth',
   handler: function(req, reply) {
     request(`https://slack.com/api/oauth.access?client_id=${clientID}&client_secret=${clientSecret}&code=${req.query.code}`, function(error, response, body) {
-      console.log(body);
-
       let token = JSON.parse(body).access_token;
       let teamID = JSON.parse(body).team_id;
       let teamName = JSON.parse(body).team_name;
       teamTokens[teamID] = token;
 
-      return reply.redirect(`https://${teamName}.slack.com/`);
+      reply.view('success', { teamName: teamName });
     });
   }
 });
