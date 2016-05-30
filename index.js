@@ -49,6 +49,8 @@ server.route({
   path: '/auth',
   handler: function(req, reply) {
     request(`https://slack.com/api/oauth.access?client_id=${clientID}&client_secret=${clientSecret}&code=${req.query.code}`, function(error, response, body) {
+      console.log(body);
+
       let token = JSON.parse(body).access_token;
       let teamID = JSON.parse(body).team_id;
       let teamName = JSON.parse(body).team_name;
