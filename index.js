@@ -12,9 +12,9 @@ server.route({
   handler: function (request, reply) {
     let channel = request.payload.channel_id;
     let userID = request.payload.user_id;
-
+    let usersText = request.payload.text || '';
     getUser(userID)
-      .then((user) => postMessage(user, channel, `${request.params.text} (╯°□°)╯︵ ┻━┻`))
+      .then((user) => postMessage(user, channel, `${usersText ? usersText + ' ': ''}(╯°□°)╯︵ ┻━┻`))
       .then((msg) => reply(''))
       .catch(err => {
         reply({text: 'Something went wrong', in_channel: false})
