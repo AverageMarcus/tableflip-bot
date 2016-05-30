@@ -1,12 +1,12 @@
 "use strict";
 const request = require('request');
+const redis = require("redis").createClient({url: process.env.REDIS_URL});
 const Hapi = require('hapi');
 const server = new Hapi.Server();
 server.connection({ port: process.env.PORT || 7000 });
 
 const clientID = process.env.client_id;
 const clientSecret = process.env.client_secret;
-let teamTokens = {};
 
 server.register(require('vision'), (err) => {
   server.views({
@@ -27,14 +27,17 @@ server.route({
     let teamId = req.payload.team_id;
     let usersText = req.payload.text || '';
 
-    getUser(teamTokens[teamId], userID)
-      .then((user) => postMessage(teamTokens[teamId], user, channel, `${usersText ? usersText + ' ': ''}(╯°□°)╯︵ ┻━┻`))
-      .then((msg) => reply(''))
-      .catch(err => {
-        console.log(err);
-        reply({text: 'Something went wrong', in_channel: false})
-          .header('Content-Type', 'application/json');
-      });
+    redis.get(teamId, (err, token) => {
+      getUser(token, userID)
+        .then((user) => postMessage(token, user, channel, `${usersText ? usersText + ' ': ''}(╯°□°)╯︵ ┻━┻`))
+        .then((msg) => reply(''))
+        .catch(err => {
+          console.log(err);
+          reply({text: 'Something went wrong', in_channel: false})
+            .header('Content-Type', 'application/json');
+        });
+    });
+
   }
 });
 
@@ -70,7 +73,7 @@ server.route({
       let token = JSON.parse(body).access_token;
       let teamID = JSON.parse(body).team_id;
       let teamName = JSON.parse(body).team_name;
-      teamTokens[teamID] = token;
+      redis.set(teamID, token);
 
       reply.view('success', { teamName: teamName });
     });
