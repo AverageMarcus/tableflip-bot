@@ -48,6 +48,14 @@ server.route({
 
 server.route({
   method: 'GET',
+  path: '/',
+  handler: function(req, reply) {
+    reply.view('index');
+  }
+});
+
+server.route({
+  method: 'GET',
   path: '/install',
   handler: function(req, reply) {
     return reply.redirect(`https://slack.com/oauth/authorize?client_id=${clientID}&scope=chat:write:bot,users:read`);
