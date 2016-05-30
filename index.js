@@ -52,7 +52,6 @@ server.route({
       let token = JSON.parse(body).access_token;
       let teamID = JSON.parse(body).team_id;
       teamTokens[teamID] = token;
-      console.log(JSON.stringify(teamTokens, null, 2));
 
       reply('Integration installed');
     });
@@ -94,7 +93,6 @@ function urlEncodeTag(strings, ...values) {
 
 function postMessage(token, user, channel, message) {
   return new Promise((resolve, reject) => {
-    console.log(`Posting as ${user.name}`);
     let url = urlEncodeTag`https://slack.com/api/chat.postMessage?token=${token}&channel=${channel}&text=${message}&username=${user.profile.real_name_normalized || user.name}&as_user=false&icon_url=${user.profile.image_512}`;
     request(url, function(error, response, body) {
       if(error) return reject(error);
