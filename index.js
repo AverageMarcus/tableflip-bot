@@ -44,7 +44,7 @@ server.route({
       let teamID = JSON.parse(body).team_id;
       teamTokens[teamID] = token;
 
-      reply('');
+      reply('Integration installed');
     });
   }
 });
