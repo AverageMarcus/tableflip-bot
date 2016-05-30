@@ -11,11 +11,11 @@ let teamTokens = {};
 server.route({
   method: 'POST',
   path: '/tableflip',
-  handler: function(request, reply) {
-    let channel = request.payload.channel_id;
-    let userID = request.payload.user_id;
-    let teamId = request.payload.team_id;
-    let usersText = request.payload.text || '';
+  handler: function(req, reply) {
+    let channel = req.payload.channel_id;
+    let userID = req.payload.user_id;
+    let teamId = req.payload.team_id;
+    let usersText = req.payload.text || '';
 
     getUser(teamTokens[teamId], userID)
       .then((user) => postMessage(teamTokens[teamId], user, channel, `${usersText ? usersText + ' ': ''}(╯°□°)╯︵ ┻━┻`))
@@ -30,7 +30,7 @@ server.route({
 server.route({
   method: 'GET',
   path: '/install',
-  handler: function(request, reply) {
+  handler: function(req, reply) {
     return reply.redirect(`https://slack.com/oauth/authorize?client_id=${clientID}&scope=chat:write:bot,users:read`);
   }
 });
@@ -38,8 +38,8 @@ server.route({
 server.route({
   method: 'GET',
   path: '/auth',
-  handler: function(request, reply) {
-    request(`https://slack.com/api/oauth.access?client_id=${clientID}&client_secret=${clientSecret}&code=${request.query.code}`, function(error, response, body) {
+  handler: function(req, reply) {
+    request(`https://slack.com/api/oauth.access?client_id=${clientID}&client_secret=${clientSecret}&code=${req.query.code}`, function(error, response, body) {
       let token = JSON.parse(body).access_token;
       let teamID = JSON.parse(body).team_id;
       teamTokens[teamID] = token;
